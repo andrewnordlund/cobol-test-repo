@@ -20,7 +20,7 @@ jobs:
         run: |
           mkdir dist
           mkdir build
-          cobc -x src/hello-world.cbl -o build/hello-world
+          cobc -x src/hello_world.cbl -o build/hello-world
           ls -al build/
           build/hello-world
           cp build/hello-world dist/
