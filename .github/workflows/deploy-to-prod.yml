@@ -14,20 +14,17 @@ jobs:
     steps:
       - name: Checkout Step
         uses: actions/checkout@v4
-      - name: Copy files to dist
-        run: |
-          mkdir dist
-          mkdir build
-          cp src/* build/
 
       - uses: fabasoad/setup-cobol-action@v1
       - name: Run script
         run: |
-          cobc -x build/hello-world.cbl -o build/hello-world
+          mkdir dist
+          mkdir build
+          cobc -x src/hello-world.cbl -o build/hello-world
           ls -al build/
           build/hello-world
           cp build/hello-world dist/
-
+          ls -al dist
       - name: Deploy using Rsync
         uses: burnett01/rsync-deployments@6.0.0
         with:
