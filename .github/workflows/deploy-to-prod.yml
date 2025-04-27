@@ -21,7 +21,8 @@ jobs:
           mkdir dist
           mkdir build
           ls -l /usr/lib*/libcob*
-          cobc -x -o build/hello-world src/hello_world.cbl -Wl,-static
+          cobc -C -o build/hello-world.c src/hello_world.cbl
+          gcc -static -o build/hello-world build/hello-world.c -lcob
           ls -al build/
           file build/hello-world  
           build/hello-world
