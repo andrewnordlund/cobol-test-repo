@@ -23,7 +23,7 @@ jobs:
       - uses: fabasoad/setup-cobol-action@v1
       - name: Run script
         run: |
-          cobc -x build/hello-world.cbl
+          cobc -x build/hello-world.cbl -o build/hello-world
           ls -al build/
           build/hello-world
           cp build/hello-world dist/
