@@ -20,6 +20,7 @@ jobs:
         run: |
           mkdir dist
           mkdir build
+          ls -l /usr/lib*/libcob*
           cobc -x -static -o build/hello-world src/hello_world.cbl
           ls -al build/
           build/hello-world
