@@ -1,0 +1,40 @@
+name: Deploy This Website to Siteground
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [ main ]
+    
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Step
+        uses: actions/checkout@v4
+      - name: Copy files to dist
+        run: |
+          mkdir dist
+          mkdir build
+          cp src/* build/
+
+      - uses: fabasoad/setup-cobol-action@v1
+      - name: Run script
+        run: |
+          cobc -x build/hello-world.cbl
+          ls -al build/
+          build/hello-world
+          cp build/hello-world dist/
+
+      - name: Deploy using Rsync
+        uses: burnett01/rsync-deployments@6.0.0
+        with:
+          switches: -avrh --delete
+          path: dist/
+          remote_path: /home/${{ vars.SSH_USERNAME }}/www/wpaz.dev/public_html/rsyncTest/
+          remote_host: ${{ vars.SSH_HOST }}
+          remote_port: 18765 
+          remote_user: ${{ vars.SSH_USERNAME }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
