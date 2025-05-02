@@ -20,9 +20,9 @@ jobs:
         run: |
           mkdir dist
           mkdir build
-          ls -l /usr/lib*/libcob*
+          ls -l /usr/lib*
           cobc -C -o build/hello-world.c src/hello_world.cbl
-          gcc -static -o build/hello-world build/hello-world.c -lcob  -lncurses -lxml2 -lgmp -ldb
+          gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb
           ls -al build/
           file build/hello-world  
           build/hello-world
