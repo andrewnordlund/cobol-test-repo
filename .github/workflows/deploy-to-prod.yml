@@ -21,13 +21,13 @@ jobs:
           mkdir dist
           mkdir build
           ls -l /usr/lib*
-          cobc -C -o build/hello-world.c src/hello_world.cbl
-          gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb
-          ls -al build/
-          file build/hello-world  
-          build/hello-world
-          cp build/hello-world dist/
-          ls -al dist
+          #cobc -C -o build/hello-world.c src/hello_world.cbl
+          #gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb
+          #ls -al build/
+          #file build/hello-world  
+          #build/hello-world
+          #cp build/hello-world dist/
+          #ls -al dist
       - name: Upload Libs
         uses: burnett01/rsync-deployments@6.0.0
         with:
