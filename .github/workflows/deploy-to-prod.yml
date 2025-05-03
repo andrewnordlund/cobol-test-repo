@@ -28,6 +28,16 @@ jobs:
           build/hello-world
           cp build/hello-world dist/
           ls -al dist
+      - name: Upload Libs
+        uses: burnett01/rsync-deployments@6.0.0
+        with:
+          switches: -avrh --delete
+          path: /lib/
+          remote_path: /home/${{ vars.SSH_USERNAME }}/lib/
+          remote_host: ${{ vars.SSH_HOST }}
+          remote_port: 18765 
+          remote_user: ${{ vars.SSH_USERNAME }}
+          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Deploy using Rsync
         uses: burnett01/rsync-deployments@6.0.0
         with:
