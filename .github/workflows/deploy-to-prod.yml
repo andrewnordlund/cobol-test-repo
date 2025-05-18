@@ -21,18 +21,20 @@ jobs:
           mkdir dist
           mkdir build
           ls -l /usr/lib*
-          #cobc -C -o build/hello-world.c src/hello_world.cbl
-          #gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb
+          cobc -C -o build/hello-world.c src/hello_world.cbl
+          gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb || echo "Fallback to dynamic link"
+          cobc -x -o build/hello-world src/hello_world.cbl
           #ls -al build/
-          #file build/hello-world  
-          #build/hello-world
-          #cp build/hello-world dist/
+          file build/hello-world  
+          ./build/hello-world
+          cp build/hello-world dist/
+          ldd build/hello-world | awk '{ print $3 }' | grep ^/ | xargs -I '{}' cp -v '{}' dist/lib/
           #ls -al dist
       - name: Upload Libs
         uses: burnett01/rsync-deployments@6.0.0
         with:
           switches: -avrh --delete
-          path: /lib/
+          path: dist/lib/
           remote_path: /home/${{ vars.SSH_USERNAME }}/lib/
           remote_host: ${{ vars.SSH_HOST }}
           remote_port: 18765 
