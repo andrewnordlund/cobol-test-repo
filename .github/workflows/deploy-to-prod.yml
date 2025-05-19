@@ -1,59 +1,67 @@
-name: Deploy This Website to Siteground
+name: Deploy COBOL Website to SiteGround
+
 on:
   push:
     branches: [main]
   pull_request:
-    branches: [ main ]
-    
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [main]
   workflow_dispatch:
-  
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Step
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - uses: fabasoad/setup-cobol-action@v1
-      - name: Run script
+      - name: Set Up GNU COBOL
+        uses: fabasoad/setup-cobol-action@v1
+
+      - name: Build and Copy COBOL App
         run: |
-          mkdir dist
-          mkdir build
-          ls -l /usr/lib*
-          echo "doing cobc -C -b ...."
+          mkdir -p dist/lib
+          mkdir -p build
+
+          # Optional static compile (fails silently if unsupported)
           cobc -C -o build/hello-world.c src/hello_world.cbl
-          echo "doing gcc -static -o ....
-          gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb || echo "Fallback to dynamic link"
-          echo "doing cobc -x -o....i don't know why this is being done twice."
+          gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb || echo "Static linking failed, falling back to dynamic link"
+
+          # Fallback to dynamic link
           cobc -x -o build/hello-world src/hello_world.cbl
-          #ls -al build/
-          echo "Doing file build/hello-world...."
-          file build/hello-world  
-          echo "Running build/hello-world...."
+
+          # Show info
+          file build/hello-world
           ./build/hello-world
-          echo "Now copying hello-world to dist/"
+
+          # Copy executable
           cp build/hello-world dist/
-          echo "Now doing ldd build...."
+
+          # Copy only required shared libraries
           ldd build/hello-world | awk '{ print $3 }' | grep ^/ | xargs -I '{}' cp -v '{}' dist/lib/
-          #ls -al dist
-      - name: Upload Libs
+
+          # Show contents
+          ls -al dist/
+          ls -al dist/lib/
+
+      - name: Upload Required Libraries
         uses: burnett01/rsync-deployments@6.0.0
         with:
           switches: -avrh --delete
           path: dist/lib/
           remote_path: /home/${{ vars.SSH_USERNAME }}/lib/
           remote_host: ${{ vars.SSH_HOST }}
-          remote_port: 18765 
+          remote_port: 18765
           remote_user: ${{ vars.SSH_USERNAME }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
-      - name: Deploy using Rsync
+
+      - name: Upload COBOL Executable
         uses: burnett01/rsync-deployments@6.0.0
         with:
           switches: -avrh --delete
           path: dist/
           remote_path: /home/${{ vars.SSH_USERNAME }}/www/wpaz.dev/public_html/cobolTest/
           remote_host: ${{ vars.SSH_HOST }}
-          remote_port: 18765 
+          remote_port: 18765
           remote_user: ${{ vars.SSH_USERNAME }}
           remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
