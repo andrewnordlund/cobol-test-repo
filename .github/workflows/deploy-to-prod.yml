@@ -21,13 +21,20 @@ jobs:
           mkdir dist
           mkdir build
           ls -l /usr/lib*
+          echo "doing cobc -C -b ...."
           cobc -C -o build/hello-world.c src/hello_world.cbl
+          echo "doing gcc -static -o ....
           gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb || echo "Fallback to dynamic link"
+          echo "doing cobc -x -o....i don't know why this is being done twice."
           cobc -x -o build/hello-world src/hello_world.cbl
           #ls -al build/
+          echo "Doing file build/hello-world...."
           file build/hello-world  
+          echo "Running build/hello-world...."
           ./build/hello-world
+          echo "Now copying hello-world to dist/"
           cp build/hello-world dist/
+          echo "Now doing ldd build...."
           ldd build/hello-world | awk '{ print $3 }' | grep ^/ | xargs -I '{}' cp -v '{}' dist/lib/
           #ls -al dist
       - name: Upload Libs
