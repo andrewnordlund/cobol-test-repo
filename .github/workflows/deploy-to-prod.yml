@@ -27,7 +27,7 @@ jobs:
           wget https://ftp.gnu.org/gnu/gnucobol/gnucobol-3.2.tar.gz
           tar xzf gnucobol-3.2.tar.gz
           cd gnucobol-3.2
-          ./configure
+          ./configure --without-db
           make -j$(nproc)
           make install
           ldconfig
