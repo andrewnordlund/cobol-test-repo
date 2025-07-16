@@ -3,59 +3,47 @@ name: Deploy COBOL Website to SiteGround
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    container:
+      image: almalinux:8
 
     steps:
-      - name: Checkout Repository
+      - name: Install required packages
+        run: |
+          dnf install -y epel-release
+          dnf groupinstall -y "Development Tools"
+          dnf install -y \
+            gcc make wget tar \
+            gmp-devel libxml2-devel ncurses-devel db4-devel \
+            which
+
+      - name: Download and build GNUCobol
+        run: |
+          wget https://ftp.gnu.org/gnu/gnucobol/gnucobol-3.2.tar.gz
+          tar xzf gnucobol-3.2.tar.gz
+          cd gnucobol-3.2
+          ./configure
+          make -j$(nproc)
+          make install
+          ldconfig
+
+      - name: Checkout source code
         uses: actions/checkout@v4
 
-      - name: Set Up GNU COBOL
-        uses: fabasoad/setup-cobol-action@v1
-
-      - name: Build and Copy COBOL App
+      - name: Compile COBOL program
         run: |
-          mkdir -p dist/lib
-          mkdir -p build
-
-          # Optional static compile (fails silently if unsupported)
-          cobc -C -o build/hello-world.c src/hello_world.cbl
-          gcc -static -o build/hello-world build/hello-world.c -lcob -lncurses -lxml2 -lgmp -ldb || echo "Static linking failed, falling back to dynamic link"
-
-          # Fallback to dynamic link
+          mkdir -p build dist
           cobc -x -o build/hello-world src/hello_world.cbl
-
-          # Show info
           file build/hello-world
-          ./build/hello-world
-
-          # Copy executable
+          build/hello-world
           cp build/hello-world dist/
 
-          # Copy only required shared libraries
-          ldd build/hello-world | awk '{ print $3 }' | grep ^/ | xargs -I '{}' cp -v '{}' dist/lib/
-
-          # Show contents
-          ls -al dist/
-          ls -al dist/lib/
-
-      - name: Upload Required Libraries
-        uses: burnett01/rsync-deployments@6.0.0
-        with:
-          switches: -avrh --delete
-          path: dist/lib/
-          remote_path: /home/${{ vars.SSH_USERNAME }}/lib/
-          remote_host: ${{ vars.SSH_HOST }}
-          remote_port: 18765
-          remote_user: ${{ vars.SSH_USERNAME }}
-          remote_key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Upload COBOL Executable
+      - name: Deploy binary via rsync
         uses: burnett01/rsync-deployments@6.0.0
         with:
           switches: -avrh --delete
