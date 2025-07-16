@@ -1,11 +1,11 @@
-name: Deploy This Website to Siteground
+name: Deploy COBOL Website to SiteGround
+
 on:
   push:
     branches: [main]
-    
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
