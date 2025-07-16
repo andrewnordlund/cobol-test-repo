@@ -18,9 +18,9 @@ jobs:
           dnf install -y epel-release
           dnf groupinstall -y "Development Tools"
           dnf install -y \
-            gcc make wget tar \
-            gmp-devel libxml2-devel ncurses-devel db4-devel \
-            which
+          gcc make wget tar \
+          gmp-devel libxml2-devel ncurses-devel \
+          which
 
       - name: Download and build GNUCobol
         run: |
