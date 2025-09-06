@@ -1,54 +1,42 @@
-name: Deploy COBOL Website to SiteGround
-
+name: Deploy This Website to Siteground
 on:
   push:
-    branches: [main]
+    branches: [main,dev]
+    
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-
+  
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     container:
-      image: almalinux:8
-
+      image: misterfalcon/fedora-gnucobol:latest
     steps:
-      - name: Install required packages
-        run: |
-          dnf install -y epel-release
-          dnf groupinstall -y "Development Tools"
-          dnf install -y \
-          gcc make wget tar \
-          gmp-devel libxml2-devel ncurses-devel \
-          which
-
-      - name: Download and build GNUCobol
-        run: |
-          wget https://ftp.gnu.org/gnu/gnucobol/gnucobol-3.2.tar.gz
-          tar xzf gnucobol-3.2.tar.gz
-          cd gnucobol-3.2
-          ./configure --without-db
-          make -j$(nproc)
-          make install
-          ldconfig
-
-      - name: Checkout source code
+      - name: Checkout Step
         uses: actions/checkout@v4
-
-      - name: Compile COBOL program
+      - name: Copy files to dist
         run: |
-          mkdir -p build dist
-          cobc -x -o build/hello-world src/hello_world.cbl
-          file build/hello-world
-          build/hello-world
-          cp build/hello-world dist/
+          scripts/build.sh
+      - name: Set remote path
+        id: set_path
+        run: |
+          echo "Current branch is: ${{ github.ref_name }}"
+         
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            REMOTE_PATH="wpaz.dev"
+          else
+            REMOTE_PATH="dev.wpaz.dev"
+          fi
 
+          echo "REMOTE_PATH=$REMOTE_PATH" >> $GITHUB_ENV
+          echo "Remote path: $REMOTE_PATH"
+          
       - name: Deploy binary via rsync
         uses: burnett01/rsync-deployments@6.0.0
         with:
-          switches: -avrh --delete
+          switches: -rlpcgoDv --delete
           path: dist/
-          remote_path: /home/${{ vars.SSH_USERNAME }}/www/wpaz.dev/public_html/cobolTest/
+          remote_path: /home/${{ vars.SSH_USERNAME }}/www/${{ env.REMOTE_PATH }}/public_html/cobolTest/
           remote_host: ${{ vars.SSH_HOST }}
           remote_port: 18765
           remote_user: ${{ vars.SSH_USERNAME }}
