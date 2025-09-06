@@ -12,7 +12,7 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 echo "Moving from $CURRENT_BRANCH to $destination."
 
 if [ "$destination" == "test" ]; then
-  DEST=$WEBBASE"wpaz.dev/rsyncTest2"
+  DEST=$WEBBASE"wpaz.dev/cobolTest"
   echo "Going to test.  Moving files from dest to $DEST"
   rsync -avrhP dist/ $DEST
 elif [ "$destination" == "dev" ] || [ "$destination" == "prod" ]; then
@@ -40,3 +40,4 @@ fi
 
 echo "Exiting"
 exit 0
+

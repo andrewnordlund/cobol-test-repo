@@ -21,11 +21,9 @@ cp src/* build/
 cobc -x build/hello_world.cbl -o build/hello_world
 echo "About to remote build/hello_world.cbl"
 rm build/hello_world.cbl
-echo "Removed"
 cp build/* dist/
 ls -Rl
 
 if [ "$cleanUp" == "true" ]; then
   rm -Rf build
 fi
-
