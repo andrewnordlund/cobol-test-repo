@@ -10,18 +10,11 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "/lib/cobollib.php");
   <h1>Hello World 2</h1>
   <?php
         print "<p>This page should work.</p>\n";
-        $retCode = null;
-        $output = null;
-        exec("./runcobol.sh", $output, $retCode);
-        print "<p>Result:<br>\n"; // . var_dump($output) . ", $retCode.</p>\n";
-        for ($i = 0; $i < count($output); $i++) {
-                print $output[$i] . "<br>\n";
-        }
 
         $retCode = null;
         $output = null;
         exec("./hello_world", $output, $retCode);
-		print "Result 2:<br>\n";
+		print "Result :<br>\n";
         for ($i = 0; $i < count($output); $i++) {
                 print $output[$i] . "<br>\n";
         }
