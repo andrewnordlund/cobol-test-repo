@@ -4,10 +4,10 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "/lib/cobollib.php");
 <!DOCTYPE html>
 <html lang="en">
  <head>
-        <title>Hello World 2</title>
+        <title>Hello World in COBOL</title>
  </head>
  <body>
-  <h1>Hello World 2</h1>
+  <h1>Hello World in COBOL</h1>
   <?php
         print "<p>This page should work.</p>\n";
 
