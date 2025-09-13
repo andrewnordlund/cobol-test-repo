@@ -19,8 +19,9 @@ fi
 mkdir dist build
 cp src/* build/
 cobc -x build/hello_world.cbl -o build/hello_world
-echo "About to remote build/hello_world.cbl"
-rm build/hello_world.cbl
+cobc -x build/coboltut3.cbl -o build/coboltut3
+echo "About to remote build/hello_world.cbl and coboltut3.cbl..."
+rm build/*.cbl
 cp build/* dist/
 ls -Rl
 
