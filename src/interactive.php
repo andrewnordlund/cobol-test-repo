@@ -54,6 +54,8 @@ function execCBL($prog, $age) {
             '/or X to Exit/' => "X",
         ]
     );
+    $out = preg_replace("/Enter Age:/", "Enter Age: $age\n", $out);
+    $out = preg_replace("/Enter Single Number or X to Exit:/", "", $out);
     echo "<p>Result:</p><div class=\"results\"><pre>" . htmlspecialchars($out) . "</pre></div>\n";
 }
 
@@ -65,7 +67,16 @@ function runWithExpect($cmd, $interactions) {
     ];
 
     // Wrap command to disable output buffering
-    $wrappedCmd = "stdbuf -o0 -e0 " . $cmd;
+	// On a Mac you may need to run: sudo port install coreutils to get stdbuf
+
+	$stdbuf = "stdbuf";
+	if (PHP_OS_FAMILY === 'Darwin') {
+		$stdbuf = "/opt/local/bin/gstdbuf"; // MacPorts or Homebrew
+		print "Setting to gstdbuf<br>.\n";
+	}
+	$wrappedCmd = "$stdbuf -o0 -e0 " . $cmd;
+
+	print "wrappedCmd: $wrappedCmd<br>\n";
 
     $proc = proc_open($wrappedCmd, $descriptorspec, $pipes);
 
@@ -116,6 +127,3 @@ function runWithExpect($cmd, $interactions) {
     return [$output, $returnCode];
 }
 ?>
-
-
-
