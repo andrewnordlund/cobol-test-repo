@@ -10,7 +10,7 @@ if (!preg_match("/\d/", $age)) $age = null;
 	<head>
 		<meta charset="utf-8">
  		
-        <title>Interactive COBOL</title>
+		<title>Interactive COBOL</title>
 		<meta content="width=device-width,initial-scale=1" name="viewport">
 		<link href="styles/cobolTest.css" rel="Stylesheet" type="text/css">
 	</head>
@@ -18,10 +18,13 @@ if (!preg_match("/\d/", $age)) $age = null;
 		<main>
 			<h1>Interactive COBOL</h1>
   <?php
-        print "<p>This page should work.</p>\n";
+		print "<p>This page should work.</p>\n";
 
 		if ($age) {
-			execCBL("./coboltut3", $age);
+			$out = execCBL("./coboltut3", ['/Enter Age:/' => $age, '/or X to Exit/' => "X",]);
+			$out = preg_replace("/Enter Age:/", "Enter Age: $age\n", $out);
+			$out = preg_replace("/Enter Single Number or X to Exit:/", "", $out);
+			print "<p>Result:</p><div class=\"results\"><pre>" . htmlspecialchars($out) . "</pre></div>\n";
 		}
 ?>
 			<form action="" method="GET">
@@ -34,7 +37,7 @@ if (!preg_match("/\d/", $age)) $age = null;
 			</div>
 			</form>
   			<div>
-	        	<p>That's all, folks!</p>
+				<p>That's all, folks!</p>
 			</div>
 		</main>
 		<footer>
@@ -46,82 +49,71 @@ if (!preg_match("/\d/", $age)) $age = null;
 
 <?php
 
-function execCBL($prog, $age) {
-    list($out, $rc) = runWithExpect(
-        "./coboltut3",
-        [
-            '/Enter Age:/' => $age,
-            '/or X to Exit/' => "X",
-        ]
-    );
-    $out = preg_replace("/Enter Age:/", "Enter Age: $age\n", $out);
-    $out = preg_replace("/Enter Single Number or X to Exit:/", "", $out);
-    echo "<p>Result:</p><div class=\"results\"><pre>" . htmlspecialchars($out) . "</pre></div>\n";
-}
 
-function runWithExpect($cmd, $interactions) {
-    $descriptorspec = [
-        0 => ["pipe", "r"], // stdin
-        1 => ["pipe", "w"], // stdout
-        2 => ["pipe", "w"], // stderr
-    ];
+function execCBL($cmd, $interactions) {
+	$descriptorspec = [
+		0 => ["pipe", "r"], // stdin
+		1 => ["pipe", "w"], // stdout
+		2 => ["pipe", "w"], // stderr
+	];
 
-    // Wrap command to disable output buffering
+	// Wrap command to disable output buffering
 	// On a Mac you may need to run: sudo port install coreutils to get stdbuf
 
+	//$stdbuf = findStdbuf();
 	$stdbuf = "stdbuf";
 	if (PHP_OS_FAMILY === 'Darwin') {
-		$stdbuf = "/opt/local/bin/gstdbuf"; // MacPorts or Homebrew
+		$stdbuf = "gstdbuf"; // MacPorts or Homebrew
 	}
 	$wrappedCmd = "$stdbuf -o0 -e0 " . $cmd;
 
 
-    $proc = proc_open($wrappedCmd, $descriptorspec, $pipes);
+	$proc = proc_open($wrappedCmd, $descriptorspec, $pipes);
 
-    if (!is_resource($proc)) {
-        throw new RuntimeException("Failed to start process: $cmd");
-    }
+	if (!is_resource($proc)) {
+		throw new RuntimeException("Failed to start process: $cmd");
+	}
 
-    // Make pipes non-blocking
-    stream_set_blocking($pipes[1], false);
-    stream_set_blocking($pipes[2], false);
+	// Make pipes non-blocking
+	stream_set_blocking($pipes[1], false);
+	stream_set_blocking($pipes[2], false);
 
-    $output = "";
-    $buffer = "";
+	$output = "";
+	$buffer = "";
 
-    while (true) {
-        $read = [$pipes[1], $pipes[2]];
-        $write = null;
-        $except = null;
+	while (true) {
+		$read = [$pipes[1], $pipes[2]];
+		$write = null;
+		$except = null;
 
-        if (stream_select($read, $write, $except, 0, 200000)) { // 200ms timeout
-            foreach ($read as $r) {
-                $chunk = fread($r, 1024);
-                if ($chunk !== false && $chunk !== "") {
-                    $output .= $chunk;
-                    $buffer .= $chunk;
+		if (stream_select($read, $write, $except, 0, 200000)) { // 200ms timeout
+			foreach ($read as $r) {
+				$chunk = fread($r, 1024);
+				if ($chunk !== false && $chunk !== "") {
+					$output .= $chunk;
+					$buffer .= $chunk;
 
-                    // Check each interaction pattern
-                    foreach ($interactions as $pattern => $reply) {
-                        if (preg_match($pattern, $buffer)) {
-                            fwrite($pipes[0], $reply . "\n");
-                            fflush($pipes[0]);
-                            $buffer = ""; // reset to avoid repeated triggers
-                        }
-                    }
-                }
-            }
-        }
+					// Check each interaction pattern
+					foreach ($interactions as $pattern => $reply) {
+						if (preg_match($pattern, $buffer)) {
+							fwrite($pipes[0], $reply . "\n");
+							fflush($pipes[0]);
+							$buffer = ""; // reset to avoid repeated triggers
+						}
+					}
+				}
+			}
+		}
 
-        $status = proc_get_status($proc);
-        if (!$status['running']) break;
-    }
+		$status = proc_get_status($proc);
+		if (!$status['running']) break;
+	}
 
-    fclose($pipes[0]);
-    fclose($pipes[1]);
-    fclose($pipes[2]);
-    $returnCode = proc_close($proc);
+	fclose($pipes[0]);
+	fclose($pipes[1]);
+	fclose($pipes[2]);
+	$returnCode = proc_close($proc);
 
-    return [$output, $returnCode];
-}
+	return $output;
+} // End of execCBL
 ?>
