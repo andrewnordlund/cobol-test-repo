@@ -4,3 +4,10 @@ div {
 .results {
 	font-family: monospace;
 }
+
+footer {
+	margin: 1.13em 1em;
+	padding-left: 1em;
+	font-size: 90%;
+	border-top: thin solid #808080;
+}

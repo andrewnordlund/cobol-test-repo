@@ -24,7 +24,7 @@
            88 ANumber VALUE "0" THRU "9".
 
         PROCEDURE DIVISION.
-           DISPLAY "Enter Age :" WITH NO ADVANCING
+           DISPLAY "Enter Age:" WITH NO ADVANCING
            ACCEPT AGE
            IF Age > 18 THEN
                DISPLAY "You can vote"
