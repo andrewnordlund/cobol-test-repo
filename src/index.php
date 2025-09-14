@@ -21,10 +21,13 @@ require_once($_SERVER['DOCUMENT_ROOT'] . "/lib/cobollib.php");
   ?>
 			</div>
 			<div>
-				<p>Check out the demo of <a href="interactive.php">Interactive COBOL</a>.
 		        <p>That's all, folks!</p>
+				<p>Check out the demo of <a href="interactive.php">Interactive COBOL</a>.
 			</div>
 		</main>
+		<footer>
+			<p>See the <a href="https://github.com/andrewnordlund/cobol-test-repo">GitHub Repo</a>.</p>
+		</footer>
 	 </body>
 </html>
 

@@ -15,34 +15,38 @@ if (!preg_match("/\d/", $age)) $age = null;
 		<link href="styles/cobolTest.css" rel="Stylesheet" type="text/css">
 	</head>
 	<body>
-		<h1>Interactive COBOL</h1>
+		<main>
+			<h1>Interactive COBOL</h1>
   <?php
         print "<p>This page should work.</p>\n";
 
 		if ($age) {
-			execCBL("./coboltut3 <<< $'$age\nX'");
+			execCBL("./coboltut3", $age);
 		}
 ?>
-		<form action="" method="GET">
-		<div>
-		<label for="age">Enter your age</label>
-		<input id="age" name="age" type="text" pattern="\d+">
-		</div>
-		<div>
-			<input type="submit" value="Submit">
-		</div>
-		</form>
-  		<div>
-			<p>Go back to the <a href="index.php">Hello World demo page</a>.
-	        <p>That's all, folks!</p>
-		</div>
+			<form action="" method="GET">
+			<div>
+				<label for="age">Enter your age</label>
+				<input id="age" name="age" type="text" pattern="\d+">
+			</div>
+			<div>
+				<input type="submit" value="Submit">
+			</div>
+			</form>
+  			<div>
+	        	<p>That's all, folks!</p>
+			</div>
+		</main>
+		<footer>
+				<p>Go back to the <a href="index.php">Hello World demo page</a>.
+				<p>See the <a href="https://github.com/andrewnordlund/cobol-test-repo">GitHub Repo</a>.</p>
+		</footer>
 	 </body>
 </html>
 
 <?php
 
-function execCBL ($prog) {
-	global $age;
+function execCBL ($prog, $age) {
 	$descriptorspec = array(
    0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
    1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
@@ -50,17 +54,26 @@ function execCBL ($prog) {
 );
 	$proc = proc_open($prog, $descriptorspec, $pipes);
 	if (is_resource($proc)) {
-		$contents = stream_get_contents($pipes[1]);
-		$contents = preg_replace("/Enter Single Number or X to Exit:/", "", $contents);
-		$contents = preg_replace("/Enter Age :/", "Enter Age: $age\n", $contents);
-		$contents = preg_replace("/\n/", "\n<br>", $contents);
+		fwrite ($pipes[0], "$age\n");
+		fwrite ($pipes[0], "X\n");
+		
+		$contents = "";
+		$line = "";
+		while (!feof($pipes[1])) {
+			$line = fgets($pipes[1]); // read program output in real time
+			$line = preg_replace("/Enter Single Number or X to Exit:/", "", $line);
+			$line = preg_replace("/Enter Age:/", "Enter Age: $age\n", $line);
+			$line = preg_replace("/\n/", "\n<br>", $line);
+			$contents .= $line;
+		}
 		proc_close($proc);
-		print "<div class=\"results\">$contents</div>\n";
+		print "<p>Result:</p><div class=\"results\">$contents</div>\n";
 	} else {
 		print "Not a process.<br>\n";
 	}
 } // End of execCBL
 
 ?>
+
 
 
