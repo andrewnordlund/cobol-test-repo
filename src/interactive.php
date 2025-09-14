@@ -46,33 +46,75 @@ if (!preg_match("/\d/", $age)) $age = null;
 
 <?php
 
-function execCBL ($prog, $age) {
-	$descriptorspec = array(
-   0 => array("pipe", "r"),  // stdin is a pipe that the child will read from
-   1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-   2 => array("pipe", "w")   // stderr 
-);
-	$proc = proc_open($prog, $descriptorspec, $pipes);
-	if (is_resource($proc)) {
-		fwrite ($pipes[0], "$age\n");
-		fwrite ($pipes[0], "X\n");
-		
-		$contents = "";
-		$line = "";
-		while (!feof($pipes[1])) {
-			$line = fgets($pipes[1]); // read program output in real time
-			$line = preg_replace("/Enter Single Number or X to Exit:/", "", $line);
-			$line = preg_replace("/Enter Age:/", "Enter Age: $age\n", $line);
-			$line = preg_replace("/\n/", "\n<br>", $line);
-			$contents .= $line;
-		}
-		proc_close($proc);
-		print "<p>Result:</p><div class=\"results\">$contents</div>\n";
-	} else {
-		print "Not a process.<br>\n";
-	}
-} // End of execCBL
+function execCBL($prog, $age) {
+    list($out, $rc) = runWithExpect(
+        "./coboltut3",
+        [
+            '/Enter Age:/' => $age,
+            '/or X to Exit/' => "X",
+        ]
+    );
+    echo "<p>Result:</p><div class=\"results\"><pre>" . htmlspecialchars($out) . "</pre></div>\n";
+}
 
+function runWithExpect($cmd, $interactions) {
+    $descriptorspec = [
+        0 => ["pipe", "r"], // stdin
+        1 => ["pipe", "w"], // stdout
+        2 => ["pipe", "w"], // stderr
+    ];
+
+    // Wrap command to disable output buffering
+    $wrappedCmd = "stdbuf -o0 -e0 " . $cmd;
+
+    $proc = proc_open($wrappedCmd, $descriptorspec, $pipes);
+
+    if (!is_resource($proc)) {
+        throw new RuntimeException("Failed to start process: $cmd");
+    }
+
+    // Make pipes non-blocking
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+
+    $output = "";
+    $buffer = "";
+
+    while (true) {
+        $read = [$pipes[1], $pipes[2]];
+        $write = null;
+        $except = null;
+
+        if (stream_select($read, $write, $except, 0, 200000)) { // 200ms timeout
+            foreach ($read as $r) {
+                $chunk = fread($r, 1024);
+                if ($chunk !== false && $chunk !== "") {
+                    $output .= $chunk;
+                    $buffer .= $chunk;
+
+                    // Check each interaction pattern
+                    foreach ($interactions as $pattern => $reply) {
+                        if (preg_match($pattern, $buffer)) {
+                            fwrite($pipes[0], $reply . "\n");
+                            fflush($pipes[0]);
+                            $buffer = ""; // reset to avoid repeated triggers
+                        }
+                    }
+                }
+            }
+        }
+
+        $status = proc_get_status($proc);
+        if (!$status['running']) break;
+    }
+
+    fclose($pipes[0]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $returnCode = proc_close($proc);
+
+    return [$output, $returnCode];
+}
 ?>
 
 
