@@ -72,11 +72,9 @@ function runWithExpect($cmd, $interactions) {
 	$stdbuf = "stdbuf";
 	if (PHP_OS_FAMILY === 'Darwin') {
 		$stdbuf = "/opt/local/bin/gstdbuf"; // MacPorts or Homebrew
-		print "Setting to gstdbuf<br>.\n";
 	}
 	$wrappedCmd = "$stdbuf -o0 -e0 " . $cmd;
 
-	print "wrappedCmd: $wrappedCmd<br>\n";
 
     $proc = proc_open($wrappedCmd, $descriptorspec, $pipes);
 
