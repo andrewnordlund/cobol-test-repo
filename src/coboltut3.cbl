@@ -24,7 +24,7 @@
            88 ANumber VALUE "0" THRU "9".
 
         PROCEDURE DIVISION.
-           DISPLAY "Enter Age:" UPON CONSOLE
+           DISPLAY "Enter Age:" WITH NO ADVANCING
            ACCEPT AGE
            IF Age > 18 THEN
                DISPLAY "You can vote"
@@ -54,7 +54,7 @@
            END-IF
            DISPLAY "Vote " CANVOTEFLAG
 
-           DISPLAY "Enter Single Number or X to Exit: " UPON CONSOLE
+           DISPLAY "Enter Single Number or X to Exit: "
            ACCEPT TESTNUMBER
            PERFORM UNTIL NOT ANumber
                EVALUATE TRUE
